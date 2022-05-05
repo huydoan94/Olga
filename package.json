@@ -1,0 +1,17 @@
+{
+  "name": "bstock-e2e-test-automation",
+  "description": "End to end tests across all BStock online functyionality.",
+  "scripts": {
+    "test": "gauge run specs/",
+    "test:dev": "gauge run --env dev specs",
+    "test:qa": "gauge run --env qa specs",
+    "test:staging": "gauge run --env staging specs"
+  },
+  "dependencies": {
+    "taiko": "1.2.8"
+  },
+  "devDependencies": {
+    "gmail-inbox": "^1.5.0",
+    "gmail-tester": "^1.3.4"
+  }
+}
