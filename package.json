@@ -8,7 +8,7 @@
     "test:staging": "gauge run --env staging specs"
   },
   "dependencies": {
-    "taiko": "1.2.8"
+    "taiko": "1.3.2"
   },
   "devDependencies": {
     "gmail-inbox": "^1.5.0",

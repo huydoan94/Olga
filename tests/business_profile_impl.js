@@ -33,7 +33,7 @@ step("Start business background", async function () {
   await click($(`//div[@to='/business-background']/button`));
 });
 
-step("Fill business background info and continue", async function () {
+step("Enter Business Name if empty and continue", async function () {
   if (!(await textBox("Name of your business").value())) {
     await write("QA_Business_Again", into(textBox("Name of your business")));
   }
@@ -43,6 +43,9 @@ step("Fill business background info and continue", async function () {
     true,
     "Must be navigated to address form."
   );
+});
+
+step("Fill business address info and continue", async function () {
   await write("12345678901", into(textBox({ name: "phone" })));
   await write("1301 Shoreway Rd.", into(textBox({ name: "address1" })));
   await write("Suite 200", into(textBox({ name: "address2" })));

@@ -89,24 +89,6 @@ step("Submit verification code", async function () {
 });
 
 step("Submit Account Info as following <table>", async function (table) {
-  // if (typeof table === "string") table = new Table([]);
-  // let rows = table.getTableRows();
-  // let firstname, lastname, phone;
-  // for (let row of rows) {
-  //   let value0 = row.getCellValues()[0];
-  //   let value1 = row.getCellValues()[1];
-  //   switch (value0.toLowerCase()) {
-  //     case "first name":
-  //       firstname = value1;
-  //       break;
-  //     case "last name":
-  //       lastname = value1;
-  //       break;
-  //     case "phone":
-  //       phone = value1;
-  //       break;
-  //   }
-  // }
   let firstname, lastname, phone;
   table.rows.forEach((row) => {
     let key = row.cells[0];
