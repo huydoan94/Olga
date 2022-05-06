@@ -12,6 +12,7 @@ const {
   $,
   below,
   waitFor,
+  focus,
 } = require("taiko");
 const assert = require("assert");
 const specStore = gauge.dataStore.specStore;
@@ -52,35 +53,46 @@ step("Fill business address info and continue", async function () {
   await write("Belmont", into(textBox({ name: "city" })));
   await dropDown({ name: "state" }).select("California");
   await write("94002", into(textBox({ name: "zipCode" })));
+  await waitFor(1000);
   await click(button("Continue"));
-  assert.ok(await text("Verify your billing address").exists());
+  assert.equal(
+    await text("Verify your billing address").exists(),
+    true,
+    "Address normalization dialog should show up."
+  );
 });
 
 step("Use suggested address and continue", async function () {
   await click(button("Use suggested address"));
   assert.ok(await button("Continue").isVisible());
   await click(button("Continue"));
-  assert.ok(
-    await text("Which of these best represents your business?").exists()
+  assert.equal(
+    await text("Which of these best represents your business?").exists(),
+    true,
+    "Business type selection page should show up."
   );
 });
 
 step("Select retailer as business type", async function () {
   await click(text("Retailer"));
   await click(button("Continue"));
-  assert.ok(
+  assert.equal(
     await text(
       "What kind of merchandise are you looking for? Click all that apply!"
-    ).exists()
+    ).exists(),
+    true,
+    "Merchandise selection page should show up."
   );
 });
 
 step("Select cell phones as merchandise", async function () {
   await click(text("Cell phones"));
   await click(button("Finish"));
-  assert.ok(
+  assert.equal(
     await text(
       "Continue building your profile to unlock access to more marketplaces and millions of products."
-    ).exists()
+    ).exists(),
+    true,
+    "Business-profile page should show up."
   );
 });

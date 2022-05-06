@@ -10,14 +10,15 @@ const {
   dropDown,
   into,
   $,
+  screencast,
 } = require("taiko");
 const assert = require("assert");
-const { get_latest_messages } = require("./utils/gmailApi.ts");
 const { randomInt } = require("crypto");
+const get_latest_messages = require("./utils/gmailApi");
 const specStore = gauge.dataStore.specStore;
 
 step("Go to account portal", async function () {
-  await goto("https://bstock-dev.com/acct");
+  await goto("https://bstock-dev.com/");
   assert.equal(
     await text("Maintenance page").exists(),
     true,
