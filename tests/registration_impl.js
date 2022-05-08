@@ -11,6 +11,8 @@ const {
   into,
   $,
   screencast,
+  waitFor,
+  image,
 } = require("taiko");
 const assert = require("assert");
 const { randomInt } = require("crypto");
@@ -54,12 +56,19 @@ step(
     const currentMessages = await get_latest_messages(
       specStore.get("register_email")
     );
-    assert.equal(currentMessages[0].subject, sub);
-    assert.equal(currentMessages[0].from, from);
-    assert.equal(currentMessages[0].to, specStore.get("register_email"));
-    assert.equal(currentMessages[0].body.text.toString().includes(msg), true);
+    let received_email;
+    for (let step = 0; step < 5; step++) {
+      if (currentMessages[step].to == specStore.get("register_email")) {
+        received_email = currentMessages[step];
+        break;
+      }
+    }
+    assert.equal(!received_email, false, "Verification email not found.");
+    assert.equal(received_email.subject, sub);
+    assert.equal(received_email.from, from);
+    assert.equal(received_email.body.text.toString().includes(msg), true);
 
-    const message = JSON.parse(currentMessages[0].body.text.toString());
+    const message = JSON.parse(received_email.body.text.toString());
     specStore.put("verify_code", message.code);
   }
 );
@@ -112,23 +121,42 @@ step("Submit Account Info as following <table>", async function (table) {
   await click(button("Continue"));
 });
 
-step(
-  "Create a password: <password> for created account",
-  async function (password) {
-    await write(password, into(textBox({ name: "password" })));
-    await click(button("Create"));
+step("Create a password for created account", async function () {
+  const password = "P@ssword-" + randomInt(11111, 99999);
+  await write(password, into(textBox({ name: "password" })));
+  specStore.put("password", password);
+
+  assert.equal(
     await $(
-      `//div[contains(@class,'Error__StyledAlert')]/following-sibling::p[text()="This password looks good! Save to finish changing the password!"]`
-    );
-    await click(button("Create"));
-    specStore.put("password", password);
-    assert.equal(
-      await text("Login").exists(),
-      true,
-      "Fusion auth login page must be displayed."
-    );
-  }
-);
+      `//div[contains(@class, 'SubmitDiv-glhiYG')]/button[contains(@class, 'SubmitButton-iOarNe')]`
+    ).isDisabled(),
+    false,
+    "Create button must be enabled after valid password is entered."
+  );
+  await click(
+    $(
+      `//div[contains(@class, 'SubmitDiv-glhiYG')]/button[contains(@class, 'SubmitButton-iOarNe')]`
+    )
+  );
+
+  assert.equal(
+    await $(
+      `//div[contains(@class,'Error__StyledAlert')]/following-sibling::p`
+    ).text(),
+    "This password looks good! Save to finish changing the password!",
+    "Password validation message mismatch."
+  );
+  await click(
+    $(
+      `//div[contains(@class, 'SubmitDiv-glhiYG')]/button[contains(@class, 'SubmitButton-iOarNe')]`
+    )
+  );
+  assert.equal(
+    await image("FusionAuth").exists(),
+    true,
+    "Fusion auth login page must be displayed."
+  );
+});
 
 step("Login with saved email and password", async function () {
   const register_email = specStore.get("register_email");

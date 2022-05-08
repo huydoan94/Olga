@@ -2,5 +2,6 @@
   "Language": "js",
   "Plugins": [
     "html-report"
-  ]
+  ],
+  "EnvironmentDir": "env"
 }

@@ -1,7 +1,10 @@
-# Business profile creation flow
+Business profile creation flow
+==============================
+
 * Register a new buyer and login
 
-## New logged in buyer can provide Business Background
+New logged in buyer can provide Business Background
+---------------------------------------------------
 * Enter business name and start profile
 * Start business background
 * Enter Business Name if empty and continue

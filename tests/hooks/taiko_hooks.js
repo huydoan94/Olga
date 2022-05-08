@@ -4,15 +4,13 @@ const path = require("path");
 const {
   openBrowser,
   closeBrowser,
-  screenshot,
   client,
-  waitFor,
   screencast,
+  screenshot,
   deleteCookies,
 } = require("taiko");
 const headless = process.env.headless_chrome.toLowerCase() === "true";
 const specStore = gauge.dataStore.specStore;
-const reporter = require("./utils/reportPortal").reporter;
 
 beforeSuite(async () => {
   await openBrowser({
@@ -21,8 +19,6 @@ beforeSuite(async () => {
   const protocol = client();
   const { Network } = protocol;
   const types = ["XHR", "Fetch"];
-
-  // specStore.put("network_logs", { req: {}, res: {} });
 
   Network.requestWillBeSent(async (params) => {
     if (types.includes(params.type)) {
@@ -54,20 +50,12 @@ afterSpec(async () => {
   await deleteCookies();
 });
 
-afterStep(async (context) => {
-  await waitFor(300); // Time for all HTTP responses to arrive
-  if (context.currentStep.isFailed) {
-    gauge.message(JSON.stringify(specStore.get("network_logs")));
-  }
-  specStore.put("network_logs", { req: {}, res: {} });
-});
-
 afterSuite(async () => {
   await closeBrowser();
 });
 
 // beforeScenario(async () => {
-//   await screencast.startScreencast("output.gif");
+//   await screencast.startScreencast(`output-${process.hrtime.bigint()}.gif`);
 // });
 
 // afterScenario(async () => {

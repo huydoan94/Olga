@@ -8,6 +8,7 @@
     "test:staging": "gauge run --env staging specs"
   },
   "dependencies": {
+    "@getgauge/cli": "^1.4.3",
     "@reportportal/client-javascript": "^5.0.6",
     "taiko": "1.2.8"
   },
