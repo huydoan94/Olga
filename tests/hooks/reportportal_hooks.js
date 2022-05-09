@@ -11,10 +11,10 @@ const specStore = gauge.dataStore.specStore;
 const scenarioStore = gauge.dataStore.scenarioStore;
 
 const client = new RPClient({
-  token: "b27a62ca-7bd4-4c4e-a63d-3b9b749ebc40",
-  endpoint: "http://localhost:8080/api/v1",
-  launch: "End-to-end Tests",
-  project: "bstock",
+  token: process.env.rp_uuid,
+  endpoint: process.env.rp_uri,
+  launch: process.env.rp_launch_name,
+  project: process.env.rp_project,
 });
 
 let launch;
@@ -22,7 +22,7 @@ let launch;
 beforeSuite(async () => {
   const config = {
     startTime: client.helpers.now(),
-    description: "BStock functional tests on UI.",
+    description: process.env.rp_launch_description,
     attributes: [
       {
         key: "build",
@@ -194,7 +194,7 @@ function mergeParallelLaunches() {
     .then((launchIds) => {
       if (launchIds.length > 1) {
         const request = client.getMergeLaunchesRequest(launchIds);
-        request.description = "BStock functional tests on UI.";
+        request.description = process.env.rp_launch_description;
         request.extendSuitesDescription = false;
         const mergeURL = "launch/merge";
         return client.restClient.create(mergeURL, request, {
