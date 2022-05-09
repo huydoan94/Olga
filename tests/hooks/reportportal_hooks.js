@@ -2,6 +2,10 @@ const RPClient = require("@reportportal/client-javascript");
 const fs = require("fs");
 const url = require("url");
 const { screenshot, waitFor } = require("taiko");
+const {
+  saveLaunchIdToFile,
+  readLaunchesFromFile,
+} = require("@reportportal/client-javascript/lib/helpers");
 const suiteStore = gauge.dataStore.suiteStore;
 const specStore = gauge.dataStore.specStore;
 const scenarioStore = gauge.dataStore.scenarioStore;
@@ -16,7 +20,7 @@ const client = new RPClient({
 let launch;
 
 beforeSuite(async () => {
-  let launchObj = client.startLaunch({
+  const config = {
     startTime: client.helpers.now(),
     description: "BStock functional tests on UI.",
     attributes: [
@@ -27,26 +31,49 @@ beforeSuite(async () => {
       {
         value: "UI",
       },
-      {
-        value: "gauge_e2e_tests",
-      },
     ],
-  });
+  };
+  let launchObj = client.startLaunch(config);
   suiteStore.put("launch", launchObj);
   launch = suiteStore.get("launch");
-  createMergeLaunchLockFile();
+  launch.promise.then(
+    (response) => {
+      if (process.env.autoMergeParallelLaunches.toLowerCase() === "true") {
+        saveLaunchIdToFile(response.id);
+      }
+    },
+    (error) => {
+      console.dir(`Error at the start of launch: ${error}`);
+    }
+  );
 });
 afterSuite(async () => {
-  client
+  await client.getPromiseFinishAllItems(launch.tempId).then(() => {
+    console.log(
+      "All report data finished uploading. Launch will be finished now."
+    );
+  });
+  await client
     .finishLaunch(launch.tempId, {
       endTime: client.helpers.now(),
     })
-    .promise.then(() => {})
-    .then(() => {
-      mergeParallelLaunches();
+    .promise.then(() => {
+      if (process.env.autoMergeParallelLaunches.toLowerCase() === "true") {
+        return mergeParallelLaunches();
+      } else {
+        return Promise.reject(
+          "skipped merge request since autoMergeParallelLaunches is false."
+        );
+      }
+    })
+    .then((res) => {
+      console.log(
+        "Finished launch: parallel launches have been merged successfully."
+      );
+    })
+    .catch((err) => {
+      console.log("Finished launch: " + err);
     });
-
-  client.getPromiseFinishAllItems(launch.tempId).then(() => {});
 });
 
 beforeSpec(async (context) => {
@@ -143,69 +170,49 @@ afterStep(async (context) => {
   specStore.put("network_logs", { req: {}, res: {} });
 });
 
-// =====
-
-async function mergeParallelLaunches() {
-  const ciBuildId = "gauge_e2e_tests";
-  try {
-    // 1. Send request to get all launches with the same CI_BUILD_ID attribute value
-    const params = new url.URLSearchParams({
-      "filter.has.attributeValue": ciBuildId,
+function mergeParallelLaunches() {
+  const launchUUIds = readLaunchesFromFile();
+  const params = new url.URLSearchParams({
+    "filter.in.uuid": launchUUIds,
+  });
+  const launchSearchUrl = `launch?${params.toString()}`;
+  return client.restClient
+    .retrieveSyncAPI(launchSearchUrl, { headers: client.headers })
+    .then((response) => {
+      const launchesInProgress = response.content.filter(
+        (l) => l.status === "IN_PROGRESS"
+      );
+      if (launchesInProgress.length) {
+        return Promise.reject(
+          "one or more launches were still IN PROGRESS. Skipped merge request."
+        );
+      } else {
+        deleteLaunchIdFiles();
+        return Promise.resolve(response.content.map((l) => l.id));
+      }
+    })
+    .then((launchIds) => {
+      if (launchIds.length > 1) {
+        const request = client.getMergeLaunchesRequest(launchIds);
+        request.description = "BStock functional tests on UI.";
+        request.extendSuitesDescription = false;
+        const mergeURL = "launch/merge";
+        return client.restClient.create(mergeURL, request, {
+          headers: client.headers,
+        });
+      } else return Promise.reject("No launches to merge.");
     });
-    const launchSearchUrl = `launch?${params.toString()}`;
-    const response = await client.restClient.retrieveSyncAPI(launchSearchUrl, {
-      headers: client.headers,
-    });
-
-    // 2. Filter them to find launches that are in progress
-    const launchesInProgress = response.content.filter(
-      (l) => l.status === "IN_PROGRESS"
-    );
-    // 3. If exists, just return
-    if (launchesInProgress.length) {
-      return;
-    }
-    // 4. If not, merge all found launches with the same CI_BUILD_ID attribute value
-    const lids = fs
-      .readdirSync("./")
-      .filter((item) => item.includes("rplaunchinprogress"))
-      .map((file) => fs.readFileSync(file, "utf-8"));
-
-    const deleted = fs
-      .readdirSync("./")
-      .filter((item) => item.includes("rplaunchinprogress"))
-      .map((file) => fs.unlinkSync(file));
-
-    const launchIds = response.content
-      .filter((l) => lids.includes(l.uuid))
-      .map((l) => l.id);
-    const request = client.getMergeLaunchesRequest(launchIds);
-    request.description = "BStock functional tests on UI.";
-    request.extendSuitesDescription = false;
-    const mergeURL = "launch/merge";
-    await client.restClient.create(mergeURL, request, {
-      headers: client.headers,
-    });
-  } catch (err) {
-    console.error("Fail to merge launches", err);
-  }
 }
 
-const createMergeLaunchLockFile = () => {
-  const filename = `rplaunchinprogress-${launch.tempId}.json`;
-  fs.open(filename, "w", (err) => {
-    if (err) {
-      throw err;
-    }
-  });
-  launch.promise.then(
-    (response) => {
-      fs.writeFile(filename, response.id, function (err) {
-        if (err) return console.log(err);
-      });
-    },
-    (error) => {
-      console.dir(`Error at the start of launch: ${error}`);
-    }
-  );
-};
+function deleteLaunchIdFiles() {
+  return fs
+    .readdirSync("./")
+    .filter((item) => item.includes("rplaunch-"))
+    .map((file) =>
+      fs.unlinkSync(file, (err) => {
+        if (err) {
+          throw err;
+        }
+      })
+    );
+}

@@ -38,7 +38,10 @@ step("Navigate to Registration flow", async function () {
 });
 
 step("Enter email id and start", async function () {
-  const register_email = `qa.bstock+${Date.now()}@gmail.com`;
+  const register_email = `qa.bstock+${Date.now()}${randomInt(
+    11111,
+    99999
+  )}@gmail.com`;
   await write(register_email, into(textBox("Email Address")));
   specStore.put("register_email", register_email);
   await click(button("Start"));
