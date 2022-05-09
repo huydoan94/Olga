@@ -216,3 +216,5 @@ function deleteLaunchIdFiles() {
       })
     );
 }
+
+module.exports = { client };
