@@ -9,7 +9,7 @@ module.exports = async function get_latest_messages(searchQuery) {
   await refresh_access_token(credentials, token);
   const inbox = new Inbox(credentials, token);
   await inbox.authenticateAccount();
-  await inbox.waitTillMessage(searchQuery, false, 10, 120);
+  await inbox.waitTillMessage(searchQuery, true, 10, 120);
 
   messages = await inbox.getLatestMessages();
   return messages;
