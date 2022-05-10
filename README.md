@@ -6,7 +6,7 @@
 
 ## Tech Stack
 
-- Node.js
+- Node.js (Tested with LTS versions: 16.15.0 and 14.19.2)
 - Javascript
 - Gauge
 - Taiko
