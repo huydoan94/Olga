@@ -11,4 +11,3 @@ reports
 node_modules
 .DS_Store
 tests/utils/gmailToken.json
-package-lock.json
