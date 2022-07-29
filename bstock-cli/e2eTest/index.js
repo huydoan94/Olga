@@ -21,3 +21,5 @@ const { clear, debug } = flags;
 
 	debug && log(flags);
 })();
+
+console.log("Hello World!");
