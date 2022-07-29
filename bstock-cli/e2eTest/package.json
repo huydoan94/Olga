@@ -1,14 +1,14 @@
 {
 	"name": "e2eTest",
 	"description": "execution of tests",
-	"main": "./e2eTest/index.js",
+	"main": "index.js",
 	"scripts": {  
  "test": "echo \"Error: no test specified\" && exit 1"
     }, 
 	"version": "0.0.1",
 	"license": "UNLICENSED",
 	"bin": {
-		"bstock": "./e2eTest/index.js"
+		"bstock": "index.js"
 	},
 	"author": {
 		"name": "Olga",

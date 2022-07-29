@@ -22,4 +22,4 @@ const { clear, debug } = flags;
 	debug && log(flags);
 })();
 
-console.log("Hello World!");
+console.log("Hello Arsh, how are you?");
