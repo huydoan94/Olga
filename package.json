@@ -1,6 +1,10 @@
 {
   "name": "gauge-ts-template",
   "description": "Starter template for writing TypeScript tests for Gauge",
+  "bin": {
+		
+		"bsk": "index.js"
+	},
   "scripts": {
     "test": "gauge run specs"
   },
