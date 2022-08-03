@@ -1,10 +1,16 @@
 #!/usr/bin/env node
 
-import fs from 'fs';
 import path from 'path';
-import { spawn } from 'child_process';
+import spawn from 'cross-spawn';
 
-const gauge = spawn('gauge', ['run', 'specs']);
+process.on("SIGTERM", () => process.exit(1));
+process.on("SIGINT", () => process.exit(1));
+process.on("SIGHUP", () => process.exit(1));
+
+const currentWorkingFolder = process.cwd();
+const executablesPath = path.join(currentWorkingFolder, 'node_modules/.bin/gauge');
+
+const gauge = spawn(executablesPath, ['run', 'specs']);
 
 gauge.stdout.on("data", data => {
     console.log(`${data}`);
