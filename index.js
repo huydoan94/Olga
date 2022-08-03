@@ -10,7 +10,8 @@ process.on("SIGHUP", () => process.exit(1));
 const currentWorkingFolder = process.cwd();
 const executablesPath = path.join(currentWorkingFolder, 'node_modules/.bin/gauge');
 
-const gauge = spawn(executablesPath, ['run', 'specs']);
+const args = process.argv.slice(2);
+const gauge = spawn(executablesPath, ['run', ...args]);
 
 gauge.stdout.on("data", data => {
     console.log(`${data}`);
